@@ -21,6 +21,11 @@ public class GlobalCustomExceptionHandler {
     }
 
     @ExceptionHandler
+    public ResponseEntity<Object> handleInsufficientFundException(InsufficientFundException exception){
+        return new ResponseEntity<>("{errors}" + exception.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
     public ResponseEntity<Map<String, String>> handleCustomValidation(MethodArgumentNotValidException exception){
 
         Map<String, String> errors = new LinkedHashMap<>();

@@ -1,6 +1,7 @@
 package com.fullstack.service;
 
 import com.fullstack.entity.Customer;
+import com.fullstack.exception.InsufficientFundException;
 import com.fullstack.exception.RecordNotFoundException;
 import com.fullstack.repository.CustomerRepository;
 import jakarta.mail.MessagingException;
@@ -105,7 +106,13 @@ public class CustomerService implements ICustomerService {
 
         double custAccountBalance = customer.getCustAccountBalance();
 
-        custAccountBalance -= amount;
+        if (customer.getCustAccountBalance() >= amount){
+            custAccountBalance -= amount;
+        } else {
+            throw new InsufficientFundException("Insufficient Funds " + custAccountBalance + " Please try other amount.");
+        }
+
+
         customer.setCustAccountBalance(custAccountBalance);
 
         customerRepository.save(customer);
