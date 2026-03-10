@@ -45,4 +45,17 @@ public class CustomerController {
     public ResponseEntity<?> findById(@PathVariable Long custId){
         return new ResponseEntity<>(customerService.findById(custId), HttpStatus.OK);
     }
+
+    @PatchMapping("/initiatefundtransfer/{fromAccountNumber}/{toAccountNumber}/{amount}")
+    public ResponseEntity<String> initiateFundTransfer(@PathVariable long fromAccountNumber, @PathVariable long toAccountNumber, @PathVariable double amount) throws MessagingException {
+        customerService.initiatefundTransfer(fromAccountNumber, toAccountNumber, amount);
+        return new ResponseEntity<>("OTP Send Successfully. ", HttpStatus.OK);
+    }
+
+    @PatchMapping("/validateotp/{fromAccountNumber}/{toAccountNumber}/{amount}/{otp}")
+    public ResponseEntity<String> validateOTP(@PathVariable long fromAccountNumber, @PathVariable long toAccountNumber, @PathVariable double amount, @PathVariable long otp) throws MessagingException {
+
+        customerService.validateOTP(fromAccountNumber, toAccountNumber,amount, otp);
+        return new ResponseEntity<>("OTP Validated", HttpStatus.OK);
+    }
 }

@@ -2,6 +2,7 @@ package com.fullstack.service;
 
 import com.fullstack.entity.Customer;
 import com.fullstack.exception.InsufficientFundException;
+import com.fullstack.exception.InvalidOTPException;
 import com.fullstack.exception.RecordNotFoundException;
 import com.fullstack.repository.CustomerRepository;
 import jakarta.mail.MessagingException;
@@ -19,12 +20,17 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
 @Slf4j
 public class CustomerService implements ICustomerService {
+
+    Map<Long, Long> otpMap = new LinkedHashMap<>();
 
     @Autowired
     CustomerRepository customerRepository;
@@ -132,5 +138,116 @@ public class CustomerService implements ICustomerService {
         javaMailSender.send(mimeMessage);
 
         log.info("Mail Sent Successfully.");
+    }
+
+    @Override
+    public void initiatefundTransfer(long fromAccountNumber, long toAccountNumber, double amount) throws MessagingException {
+
+       Customer customer1 = customerRepository.findByCustAccountNumber(fromAccountNumber).get();
+
+      // Customer customer2 = customerRepository.findByCustAccountNumber(toAccountNumber).get();
+
+       if (customer1.getCustAccountBalance() >= amount){
+           // initiate fund transfer - Generate Otp
+
+           SecureRandom secureRandom = new SecureRandom();
+           long otp = 100000 + secureRandom.nextInt(900000);
+
+           otpMap.put(fromAccountNumber, otp);
+
+           MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+
+           MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
+
+           mimeMessageHelper.setFrom(userName);
+
+           mimeMessageHelper.setTo(customer1.getCustEmailId());
+
+           mimeMessageHelper.setSubject("OTP For Fund Transfer");
+
+           mimeMessageHelper.setText("For Fund Transfer OTP : " + otp);
+
+           javaMailSender.send(mimeMessage);
+
+           log.info("OTP Send By Email : " + customer1.getCustEmailId());
+
+       } else {
+           throw new InsufficientFundException("Insufficient Funds.");
+       }
+    }
+
+    @Override
+    public void validateOTP(long fromAccountNumber, long toAccountNumber, double amount, long otp) throws MessagingException {
+
+        Customer customer1 = customerRepository.findByCustAccountNumber(fromAccountNumber).get();
+
+        Customer customer2 = customerRepository.findByCustAccountNumber(toAccountNumber).get();
+
+        long existingOTP = otpMap.get(fromAccountNumber);
+
+        if(existingOTP == otp){
+            // transfer funds
+
+            double fromCustAccountBalance = customer1.getCustAccountBalance();
+
+            fromCustAccountBalance -= amount;
+
+            customer1.setCustAccountBalance(fromCustAccountBalance);
+
+            customerRepository.save(customer1);
+
+            double toCustAccountBalance = customer2.getCustAccountBalance();
+
+            toCustAccountBalance += amount;
+
+            customer2.setCustAccountBalance(toCustAccountBalance);
+
+            customerRepository.save(customer2);
+
+            MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+
+            MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
+
+            mimeMessageHelper.setFrom(userName);
+
+            mimeMessageHelper.setTo(customer1.getCustEmailId());
+
+            mimeMessageHelper.setSubject("Amount Transfer Successfully.");
+
+            mimeMessageHelper.setText("After Transfer Remaining Account balance is : " + fromCustAccountBalance);
+
+            javaMailSender.send(mimeMessage);
+
+            log.info("Email Send Successfully. " + customer1.getCustEmailId());
+
+            // Notify Beneficiary Credit Information
+            creditFundNotification(toAccountNumber);
+
+        } else {
+            throw new InvalidOTPException("Invalid OTP");
+        }
+
+
+    }
+
+    void creditFundNotification(long toAccountNumber) throws MessagingException {
+
+        Customer customer2 = customerRepository.findByCustAccountNumber(toAccountNumber).get();
+
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+
+        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
+
+        mimeMessageHelper.setFrom(userName);
+
+        mimeMessageHelper.setTo(customer2.getCustEmailId());
+
+        mimeMessageHelper.setSubject("Amount Credited Successfully.");
+
+        mimeMessageHelper.setText("After Credited Account balance is : " + customer2.getCustAccountBalance());
+
+        javaMailSender.send(mimeMessage);
+
+        log.info("Email Send Successfully. " + customer2.getCustEmailId());
     }
 }

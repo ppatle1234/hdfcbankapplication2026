@@ -16,4 +16,8 @@ public interface ICustomerService {
     Optional<Customer> findById(Long custId);
 
     void withdrawAmount(Long custAccountNumber, double amount) throws MessagingException;
+
+    void initiatefundTransfer(long fromAccountNumber, long toAccountNumber, double amount) throws MessagingException;
+
+    void validateOTP(long fromAccountNumber, long toAccountNumber, double amount, long otp) throws MessagingException;
 }
