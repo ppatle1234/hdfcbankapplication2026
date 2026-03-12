@@ -3,6 +3,7 @@ package com.fullstack.service;
 import com.fullstack.entity.Customer;
 import jakarta.mail.MessagingException;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ICustomerService {
@@ -14,6 +15,8 @@ public interface ICustomerService {
     Customer update(Long custId, Customer customer);
 
     Optional<Customer> findById(Long custId);
+
+    List<Customer> findAll();
 
     void withdrawAmount(Long custAccountNumber, double amount) throws MessagingException;
 

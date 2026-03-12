@@ -21,10 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -103,6 +100,11 @@ public class CustomerService implements ICustomerService {
     @Override
     public Optional<Customer> findById(Long custId) {
         return Optional.of(customerRepository.findById(custId).orElseThrow(() -> new RecordNotFoundException("Customer ID Does Not Exist")));
+    }
+
+    @Override
+    public List<Customer> findAll() {
+        return customerRepository.findAll();
     }
 
     @Override

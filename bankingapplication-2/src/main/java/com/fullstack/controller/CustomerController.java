@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/customers")
 @RequiredArgsConstructor
@@ -57,5 +59,10 @@ public class CustomerController {
 
         customerService.validateOTP(fromAccountNumber, toAccountNumber,amount, otp);
         return new ResponseEntity<>("OTP Validated", HttpStatus.OK);
+    }
+
+    @GetMapping("/findall")
+    public ResponseEntity<List<Customer>> findAll(){
+        return new ResponseEntity<>(customerService.findAll(), HttpStatus.OK);
     }
 }
