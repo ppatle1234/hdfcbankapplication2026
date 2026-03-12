@@ -20,7 +20,7 @@ import java.util.List;
 @Tag(name = "Banking Application", description = "APIs of Customer Controller")
 @SecurityRequirement(name = "Bearer Auth")
 public class CustomerController {
-
+   // Controlller Classs
     private final ICustomerService customerService;
 
     @PatchMapping("/deposit/{custAccountNumber}/{amount}")
